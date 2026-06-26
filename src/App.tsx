@@ -22,12 +22,56 @@ import trexImg from './assets/dino/trex.png';
 
 const BEST_SCORE_KEY = 'merge2048-best-score';
 const SWIPE_THRESHOLD = 35;
+const CURRENT_GAME_KEY = 'dinomerge-current-game';
 
 interface GameState {
   board: Board;
   score: number;
   bestScore: number;
   gameOver: boolean;
+}
+
+function readSavedGame(): GameState | null {
+  try {
+    const savedGame = localStorage.getItem(CURRENT_GAME_KEY);
+
+    if (!savedGame) {
+      return null;
+    }
+
+    const parsed = JSON.parse(savedGame) as GameState;
+
+    const validBoard =
+      Array.isArray(parsed.board) &&
+      parsed.board.length === 4 &&
+      parsed.board.every(
+        (row) => Array.isArray(row) && row.length === 4,
+      );
+
+    if (!validBoard) {
+      return null;
+    }
+
+    return {
+      board: parsed.board,
+      score: Number(parsed.score) || 0,
+      bestScore: Math.max(
+        Number(parsed.bestScore) || 0,
+        readBestScore(),
+      ),
+      gameOver: Boolean(parsed.gameOver),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function saveCurrentGame(game: GameState): void {
+  try {
+    localStorage.setItem(CURRENT_GAME_KEY, JSON.stringify(game));
+  } catch {
+    // Le jeu continue même si la sauvegarde est indisponible.
+  }
 }
 
 const TILE_DATA: Record<number, { name: string; image: string }> = {
@@ -95,12 +139,20 @@ function renderTileContent(value: number) {
 }
 
 function App() {
-  const [game, setGame] = useState<GameState>(() => ({
+  const [game, setGame] = useState<GameState>(() => {
+  const savedGame = readSavedGame();
+
+  if (savedGame) {
+    return savedGame;
+  }
+
+  return {
     board: createInitialBoard(),
     score: 0,
     bestScore: readBestScore(),
     gameOver: false,
-  }));
+  };
+});
 
   const touchStart = useRef<{ x: number; y: number } | null>(null);
 
@@ -168,6 +220,9 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [performMove]);
 
+  useEffect(() => {
+  saveCurrentGame(game);
+  }, [game]);
   const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
     const touch = event.changedTouches[0];
     touchStart.current = { x: touch.clientX, y: touch.clientY };
