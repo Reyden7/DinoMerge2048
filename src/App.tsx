@@ -19,16 +19,25 @@ import triceImg from './assets/dino/trice.png';
 import stegoImg from './assets/dino/stego.png';
 import diploImg from './assets/dino/diplo.png';
 import trexImg from './assets/dino/trex.png';
+import supportScoreImg from './assets/ui/supportscore.png';
+
+import foliageSideImg from './assets/ui/feuillage-cote.png';
+import foliageBottomImg from './assets/ui/feuillage-bas.png';
+import foliagerightTopImg from './assets/ui/feuillage-hautdroit.png';
+import foliageLeftTopImg from './assets/ui/feuillage-hautgauche.png';
 
 const BEST_SCORE_KEY = 'merge2048-best-score';
 const SWIPE_THRESHOLD = 35;
 const CURRENT_GAME_KEY = 'dinomerge-current-game';
+const WIN_VALUE = 4; // Test temporaire : Dodo
 
 interface GameState {
   board: Board;
   score: number;
   bestScore: number;
   gameOver: boolean;
+  hasWon: boolean;
+   keepPlaying: boolean;
 }
 
 function readSavedGame(): GameState | null {
@@ -60,6 +69,8 @@ function readSavedGame(): GameState | null {
         readBestScore(),
       ),
       gameOver: Boolean(parsed.gameOver),
+      hasWon: Boolean(parsed.hasWon),
+      keepPlaying: Boolean(parsed.keepPlaying),
     };
   } catch {
     return null;
@@ -151,6 +162,8 @@ function App() {
     score: 0,
     bestScore: readBestScore(),
     gameOver: false,
+    hasWon: false,
+    keepPlaying: false,
   };
 });
 
@@ -158,7 +171,10 @@ function App() {
 
   const performMove = useCallback((direction: Direction) => {
     setGame((currentGame) => {
-      if (currentGame.gameOver) {
+      if (
+        currentGame.gameOver ||
+        (currentGame.hasWon && !currentGame.keepPlaying)
+      ) {
         return currentGame;
       }
 
@@ -171,6 +187,12 @@ function App() {
       const nextBoard = addRandomTile(move.board);
       const nextScore = currentGame.score + move.gained;
       const nextBestScore = Math.max(currentGame.bestScore, nextScore);
+
+      const hasWon =  currentGame.hasWon ||
+        nextBoard.some((row) =>
+          row.some((value) => value >= 2048),
+        );
+
       const gameOver = !hasAvailableMove(nextBoard);
 
       if (nextBestScore !== currentGame.bestScore) {
@@ -182,6 +204,8 @@ function App() {
         score: nextScore,
         bestScore: nextBestScore,
         gameOver,
+        hasWon,
+        keepPlaying: currentGame.keepPlaying,
       };
     });
   }, []);
@@ -192,6 +216,15 @@ function App() {
       score: 0,
       bestScore: currentGame.bestScore,
       gameOver: false,
+      hasWon: false,
+      keepPlaying: false,
+    }));
+  }, []);
+
+  const continueGame = useCallback(() => {
+  setGame((currentGame) => ({
+    ...currentGame,
+      keepPlaying: true,
     }));
   }, []);
 
@@ -254,31 +287,92 @@ function App() {
 
   return (
     <main className="app-shell">
-      <section className="game">
-        <header className="top-bar">
-          <div>
-            <h1>Dino Merge</h1>
-            <p className="subtitle">Fusionne les dinosaures jusqu’au Trex.</p>
+       <img
+        src={foliageSideImg}
+        alt=""
+        aria-hidden="true"
+        className="scene-fern fern-top-left1"
+        draggable={false}
+      />
+      <img
+        src={foliageSideImg}
+        alt=""
+        aria-hidden="true"
+        className="scene-fern fern-top-left2"
+        draggable={false}
+      />
+
+      <img
+        src={foliageSideImg}
+        alt=""
+        aria-hidden="true"
+        className="scene-fern fern-top-right"
+        draggable={false}
+      />
+
+      <img
+        src={foliageSideImg}
+        alt=""
+        aria-hidden="true"
+        className="scene-fern fern-mid-right"
+        draggable={false}
+      />
+
+      <img
+        src={foliageSideImg}
+        alt=""
+        aria-hidden="true"
+        className="scene-fern fern-bottom-left"
+        draggable={false}
+      />
+
+      <img
+        src={foliageSideImg}
+        alt=""
+        aria-hidden="true"
+        className="scene-fern fern-bottom-right1"
+        draggable={false}
+      />
+      <img
+        src={foliageSideImg}
+        alt=""
+        aria-hidden="true"
+        className="scene-fern fern-bottom-right2"
+        draggable={false}
+      />
+      <img
+        src={foliageSideImg}
+        alt=""
+        aria-hidden="true"
+        className="scene-fern fern-bottom-right3"
+        draggable={false}
+      />
+        <section className="game">
+        <header className="game-hud">
+          <h1 className="sr-only">Dino Merge</h1>
+
+          <div
+            className="score-banner"
+            style={{ backgroundImage: `url(${supportScoreImg})` }}
+          >
+            <div className="score-banner-content">
+              <div className="banner-score">
+                <span>Score</span>
+                <strong>{game.score}</strong>
+              </div>
+
+              <div className="score-separator" />
+
+              <div className="banner-score">
+                <span>Record</span>
+                <strong>{game.bestScore}</strong>
+              </div>
+            </div>
           </div>
 
-          <div className="score-group" aria-label="Scores">
-            <div className="score-card">
-              <span>Score</span>
-              <strong>{game.score}</strong>
-            </div>
-            <div className="score-card">
-              <span>Record</span>
-              <strong>{game.bestScore}</strong>
-            </div>
-          </div>
+          
         </header>
-
-        <div className="actions">
-          <p>Glisse dans une direction pour fusionner les dinos.</p>
-          <button type="button" onClick={startNewGame}>
-            Nouvelle partie
-          </button>
-        </div>
+        
 
         <div
           className="board-wrapper"
@@ -286,6 +380,15 @@ function App() {
           onTouchEnd={handleTouchEnd}
           aria-label="Plateau de jeu Dino Merge"
         >
+           <button
+            type="button"
+            className="new-game-button"
+            onClick={startNewGame}
+          >
+            Nouvelle partie
+          </button>
+
+           
           <div className="board">
             {game.board.flatMap((row, rowIndex) =>
               row.map((value, columnIndex) => (
@@ -299,6 +402,38 @@ function App() {
               )),
             )}
           </div>
+
+          {game.hasWon && !game.keepPlaying && (
+            <div
+              className="game-over victory-screen"
+              role="dialog"
+              aria-modal="true"
+            >
+              <div>
+                <h2>Tu as créé le T-Rex !</h2>
+                <p>
+                  Félicitations ! Tu peux continuer pour battre ton record.
+                </p>
+
+                <img
+                  src={trexImg}
+                  alt="T-Rex"
+                  className="victory-dino"
+                  draggable={false}
+                />
+
+                <div className="victory-actions">
+                  <button type="button" onClick={continueGame}>
+                    Continuer
+                  </button>
+
+                  <button type="button" onClick={startNewGame}>
+                    Nouvelle partie
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {game.gameOver && (
             <div className="game-over" role="dialog" aria-modal="true">
