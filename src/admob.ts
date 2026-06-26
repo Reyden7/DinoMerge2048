@@ -1,7 +1,7 @@
 import { Capacitor } from "@capacitor/core";
 import { AdMob, type AdOptions } from "@capacitor-community/admob";
 
-const TEST_INTERSTITIAL_ID = "ca-app-pub-3940256099942544/1033173712";
+const TEST_INTERSTITIAL_ID = "ca-app-pub-2333433898910944~6558323035";
 
 let initialized = false;
 let interstitialReady = false;
@@ -49,7 +49,7 @@ export async function prepareInterstitial(): Promise<void> {
 
   const options: AdOptions = {
     adId: TEST_INTERSTITIAL_ID,
-    isTesting: true,
+    isTesting: false,
     immersiveMode: true,
   };
 
