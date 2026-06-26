@@ -4,7 +4,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
-} from 'react';
+} from "react";
 import {
   addRandomTile,
   createInitialBoard,
@@ -12,42 +12,45 @@ import {
   moveBoard,
   type Board,
   type Direction,
-} from './game';
+} from "./game";
+import { initializeAdMob, showInterstitial } from "./admob";
 
-import './menu.css';
+import "./menu.css";
 
-import eggImg from './assets/dino/oeuf.png';
-import dodoImg from './assets/dino/dodo.png';
-import compsoImg from './assets/dino/compso.png';
-import raptorImg from './assets/dino/raptor.png';
-import pachyImg from './assets/dino/pachy.png';
-import ankyImg from './assets/dino/anky.png';
-import paraImg from './assets/dino/para.png';
-import triceImg from './assets/dino/trice.png';
-import stegoImg from './assets/dino/stego.png';
-import diploImg from './assets/dino/diplo.png';
-import trexImg from './assets/dino/trex.png';
+import eggImg from "./assets/dino/oeuf.png";
+import dodoImg from "./assets/dino/dodo.png";
+import compsoImg from "./assets/dino/compso.png";
+import raptorImg from "./assets/dino/raptor.png";
+import pachyImg from "./assets/dino/pachy.png";
+import ankyImg from "./assets/dino/anky.png";
+import paraImg from "./assets/dino/para.png";
+import triceImg from "./assets/dino/trice.png";
+import stegoImg from "./assets/dino/stego.png";
+import diploImg from "./assets/dino/diplo.png";
+import trexImg from "./assets/dino/trex.png";
 
-import supportScoreImg from './assets/ui/supportscore.png';
-import foliageSideImg from './assets/ui/feuillage-cote.png';
+import supportScoreImg from "./assets/ui/supportscore.png";
+import foliageSideImg from "./assets/ui/feuillage-cote.png";
 
-import menuVideo from './assets/video/VideoMenu.mp4';
-import menuTitleImg from './assets/ui/menu/titre.png';
-import playButtonImg from './assets/ui/menu/bt_normal.png';
-import playButtonPressedImg from './assets/ui/menu/btpressed.png';
+import menuVideo from "./assets/video/VideoMenu.mp4";
+import menuTitleImg from "./assets/ui/menu/titre.png";
+import playButtonImg from "./assets/ui/menu/bt_normal.png";
+import playButtonPressedImg from "./assets/ui/menu/btpressed.png";
 
-import gameOverBgImg from './assets/ui/menu/GameOverBG.png';
-import replayButtonImg from './assets/ui/menu/Rejouer.png';
-import replayButtonPressedImg from './assets/ui/menu/Rejouer-clicked.png';
+import gameOverBgImg from "./assets/ui/menu/GameOverBG.png";
+import replayButtonImg from "./assets/ui/menu/Rejouer.png";
+import replayButtonPressedImg from "./assets/ui/menu/Rejouer-clicked.png";
 
-import musicAudio from './assets/sound/musique.mp3';
-import clickAudio from './assets/sound/click.mp3';
-import swooshAudio from './assets/sound/swoosh.mp3';
-import fusionAudio from './assets/sound/fusion.mp3';
+import musicAudio from "./assets/sound/musique.mp3";
+import clickAudio from "./assets/sound/click.mp3";
+import swooshAudio from "./assets/sound/swoosh.mp3";
+import fusionAudio from "./assets/sound/fusion.mp3";
 
-const BEST_SCORE_KEY = 'merge2048-best-score';
-const CURRENT_GAME_KEY = 'dinomerge-current-game';
-const TUTORIAL_DONE_KEY = 'dinomerge-tutorial-done';
+const BEST_SCORE_KEY = "merge2048-best-score";
+const CURRENT_GAME_KEY = "dinomerge-current-game";
+const TUTORIAL_DONE_KEY = "dinomerge-tutorial-done";
+const GAME_OVER_AD_COUNT_KEY = "dinomerge-game-over-ad-count";
+const AD_EVERY_N_GAMES = 3;
 const SWIPE_THRESHOLD = 35;
 const WIN_VALUE = 2048;
 const SLIDE_ANIMATION_DURATION = 165;
@@ -59,7 +62,7 @@ const CLICK_VOLUME = 0.65;
 const SWOOSH_VOLUME = 0.2;
 const FUSION_VOLUME = 0.2;
 
-type Screen = 'menu' | 'game';
+type Screen = "menu" | "game";
 type TutorialStep = 0 | 1 | 2;
 
 interface GameState {
@@ -90,30 +93,30 @@ interface SlideTile extends TileMovement {
 }
 
 type SlideTileStyle = CSSProperties & {
-  '--slide-x': string;
-  '--slide-y': string;
-  '--slide-duration': string;
+  "--slide-x": string;
+  "--slide-y": string;
+  "--slide-duration": string;
 };
 
 function getLinePositions(
   direction: Direction,
   lineIndex: number,
 ): Array<{ row: number; column: number }> {
-  if (direction === 'left') {
+  if (direction === "left") {
     return Array.from({ length: 4 }, (_, column) => ({
       row: lineIndex,
       column,
     }));
   }
 
-  if (direction === 'right') {
+  if (direction === "right") {
     return Array.from({ length: 4 }, (_, index) => ({
       row: lineIndex,
       column: 3 - index,
     }));
   }
 
-  if (direction === 'up') {
+  if (direction === "up") {
     return Array.from({ length: 4 }, (_, row) => ({
       row,
       column: lineIndex,
@@ -183,10 +186,9 @@ function calculateTileMovements(
   return movements;
 }
 
-
 function readTutorialDone(): boolean {
   try {
-    return localStorage.getItem(TUTORIAL_DONE_KEY) === '1';
+    return localStorage.getItem(TUTORIAL_DONE_KEY) === "1";
   } catch {
     return false;
   }
@@ -194,7 +196,7 @@ function readTutorialDone(): boolean {
 
 function saveTutorialDone(): void {
   try {
-    localStorage.setItem(TUTORIAL_DONE_KEY, '1');
+    localStorage.setItem(TUTORIAL_DONE_KEY, "1");
   } catch {
     // Le tutoriel reste utilisable même si le stockage est indisponible.
   }
@@ -230,9 +232,7 @@ function readSavedGame(): GameState | null {
     const validBoard =
       Array.isArray(parsed.board) &&
       parsed.board.length === 4 &&
-      parsed.board.every(
-        (row) => Array.isArray(row) && row.length === 4,
-      );
+      parsed.board.every((row) => Array.isArray(row) && row.length === 4);
 
     if (!validBoard) {
       return null;
@@ -259,22 +259,47 @@ function saveCurrentGame(game: GameState): void {
   }
 }
 
+function readGameOverAdCount(): number {
+  try {
+    const value = Number(localStorage.getItem(GAME_OVER_AD_COUNT_KEY) ?? 0);
+
+    if (!Number.isFinite(value) || value < 0) {
+      return 0;
+    }
+
+    return Math.min(Math.floor(value), AD_EVERY_N_GAMES - 1);
+  } catch {
+    return 0;
+  }
+}
+
+function saveGameOverAdCount(count: number): void {
+  try {
+    localStorage.setItem(
+      GAME_OVER_AD_COUNT_KEY,
+      String(Math.max(0, Math.floor(count))),
+    );
+  } catch {
+    // Une erreur de stockage ne doit jamais empêcher de rejouer.
+  }
+}
+
 const TILE_DATA: Record<number, { name: string; image: string }> = {
-  2: { name: 'Œuf', image: eggImg },
-  4: { name: 'Dodo', image: dodoImg },
-  8: { name: 'Compsognatus', image: compsoImg },
-  16: { name: 'Raptor', image: raptorImg },
-  32: { name: 'Pachysaurus', image: pachyImg },
-  64: { name: 'Ankylosaure', image: ankyImg },
-  128: { name: 'Parasaurolophus', image: paraImg },
-  256: { name: 'Tricératops', image: triceImg },
-  512: { name: 'Stégosaure', image: stegoImg },
-  1024: { name: 'Diplodocus', image: diploImg },
-  2048: { name: 'T-Rex', image: trexImg },
+  2: { name: "Œuf", image: eggImg },
+  4: { name: "Dodo", image: dodoImg },
+  8: { name: "Compsognatus", image: compsoImg },
+  16: { name: "Raptor", image: raptorImg },
+  32: { name: "Pachysaurus", image: pachyImg },
+  64: { name: "Ankylosaure", image: ankyImg },
+  128: { name: "Parasaurolophus", image: paraImg },
+  256: { name: "Tricératops", image: triceImg },
+  512: { name: "Stégosaure", image: stegoImg },
+  1024: { name: "Diplodocus", image: diploImg },
+  2048: { name: "T-Rex", image: trexImg },
 };
 
 function tileClass(value: number): string {
-  return value === 0 ? 'tile tile-empty' : 'tile tile-dino';
+  return value === 0 ? "tile tile-empty" : "tile tile-dino";
 }
 
 function renderTileContent(value: number) {
@@ -303,13 +328,13 @@ function renderTileContent(value: number) {
 }
 
 function App() {
-  const [screen, setScreen] = useState<Screen>('menu');
-  const [tutorialDone, setTutorialDone] = useState<boolean>(
-    () => readTutorialDone(),
+  const [screen, setScreen] = useState<Screen>("menu");
+  const [tutorialDone, setTutorialDone] = useState<boolean>(() =>
+    readTutorialDone(),
   );
   const [tutorialStep, setTutorialStep] = useState<TutorialStep>(0);
 
-  const tutorialVisible = screen === 'game' && !tutorialDone;
+  const tutorialVisible = screen === "game" && !tutorialDone;
 
   const [game, setGame] = useState<GameState>(() => {
     const savedGame = readSavedGame();
@@ -345,10 +370,9 @@ function App() {
   const [hiddenSourceCells, setHiddenSourceCells] = useState<Set<string>>(
     () => new Set(),
   );
-  const [mergedCells, setMergedCells] = useState<Set<string>>(
-    () => new Set(),
-  );
-
+  const [mergedCells, setMergedCells] = useState<Set<string>>(() => new Set());
+  const [isShowingAd, setIsShowingAd] = useState(false);
+  const adInProgressRef = useRef(false);
 
   const playSound = useCallback(
     (audioRef: React.RefObject<HTMLAudioElement | null>) => {
@@ -401,161 +425,171 @@ function App() {
     setMergedCells(new Set());
   }, []);
 
-  const performMove = useCallback((direction: Direction) => {
-    if (
-      !tutorialDone ||
-      isAnimatingRef.current ||
-      game.gameOver ||
-      (game.hasWon && !game.keepPlaying)
-    ) {
-      return;
-    }
-
-    const move = moveBoard(game.board, direction);
-
-    if (!move.changed) {
-      return;
-    }
-
-    startMusic();
-    playSound(swooshSoundRef);
-
-    if (mergeBumpTimerRef.current !== null) {
-      window.clearTimeout(mergeBumpTimerRef.current);
-      mergeBumpTimerRef.current = null;
-      setMergedCells(new Set());
-    }
-
-    const boardElement = boardRef.current;
-
-    if (!boardElement) {
-      return;
-    }
-
-    const boardRect = boardElement.getBoundingClientRect();
-    const movements = calculateTileMovements(game.board, direction);
-
-    /*
-     * Une destination qui reçoit deux tuiles correspond à une fusion.
-     * On mémorise uniquement ces cases pour leur appliquer le bump.
-     */
-    const destinationCounts = new Map<string, number>();
-
-    movements.forEach((movement) => {
-      const key = `${movement.toRow}-${movement.toColumn}`;
-      destinationCounts.set(key, (destinationCounts.get(key) ?? 0) + 1);
-    });
-
-    const mergedDestinationKeys = new Set(
-      [...destinationCounts.entries()]
-        .filter(([, count]) => count === 2)
-        .map(([key]) => key),
-    );
-
-    /*
-     * On n'anime pas les tuiles immobiles qui ne fusionnent pas.
-     * Elles restent affichées normalement, ce qui évite le petit
-     * clignotement/saut visible à la fin du déplacement.
-     *
-     * Une tuile immobile qui participe à une fusion reste animée :
-     * elle doit converger avec l'autre tuile vers la même destination.
-     */
-    const animatedMovements = movements.filter((movement) => {
-      const moved =
-        movement.fromRow !== movement.toRow ||
-        movement.fromColumn !== movement.toColumn;
-
-      const destinationKey =
-        `${movement.toRow}-${movement.toColumn}`;
-
-      return moved || mergedDestinationKeys.has(destinationKey);
-    });
-
-    const hiddenSources = new Set(
-      animatedMovements.map(
-        (movement) =>
-          `${movement.fromRow}-${movement.fromColumn}`,
-      ),
-    );
-
-    const measuredSlideTiles = animatedMovements.flatMap(
-      (movement, index) => {
-      const sourceElement = boardElement.querySelector<HTMLElement>(
-        `[data-row="${movement.fromRow}"][data-column="${movement.fromColumn}"]`,
-      );
-
-      const targetElement = boardElement.querySelector<HTMLElement>(
-        `[data-row="${movement.toRow}"][data-column="${movement.toColumn}"]`,
-      );
-
-      if (!sourceElement || !targetElement) {
-        return [];
+  const performMove = useCallback(
+    (direction: Direction) => {
+      if (
+        !tutorialDone ||
+        isAnimatingRef.current ||
+        game.gameOver ||
+        (game.hasWon && !game.keepPlaying)
+      ) {
+        return;
       }
 
-      const sourceRect = sourceElement.getBoundingClientRect();
-      const targetRect = targetElement.getBoundingClientRect();
+      const move = moveBoard(game.board, direction);
 
-      return [{
-        ...movement,
-        id: `${movement.fromRow}-${movement.fromColumn}-${index}`,
-        left: sourceRect.left - boardRect.left,
-        top: sourceRect.top - boardRect.top,
-        width: sourceRect.width,
-        height: sourceRect.height,
-        deltaX: targetRect.left - sourceRect.left,
-        deltaY: targetRect.top - sourceRect.top,
-      }];
-    },
-    );
-
-    isAnimatingRef.current = true;
-    setIsAnimating(true);
-    setSlideTiles(measuredSlideTiles);
-    setHiddenSourceCells(hiddenSources);
-
-    animationTimerRef.current = window.setTimeout(() => {
-      const nextBoard = addRandomTile(move.board);
-      const nextScore = game.score + move.gained;
-      const nextBestScore = Math.max(game.bestScore, nextScore);
-
-      const hasWon =
-        game.hasWon ||
-        nextBoard.some((row) =>
-          row.some((value) => value >= WIN_VALUE),
-        );
-
-      const gameOver = !hasAvailableMove(nextBoard);
-
-      if (nextBestScore !== game.bestScore) {
-        saveBestScore(nextBestScore);
+      if (!move.changed) {
+        return;
       }
 
-      setGame({
-        board: nextBoard,
-        score: nextScore,
-        bestScore: nextBestScore,
-        gameOver,
-        hasWon,
-        keepPlaying: game.keepPlaying,
+      startMusic();
+      playSound(swooshSoundRef);
+
+      if (mergeBumpTimerRef.current !== null) {
+        window.clearTimeout(mergeBumpTimerRef.current);
+        mergeBumpTimerRef.current = null;
+        setMergedCells(new Set());
+      }
+
+      const boardElement = boardRef.current;
+
+      if (!boardElement) {
+        return;
+      }
+
+      const boardRect = boardElement.getBoundingClientRect();
+
+      /*
+       * .slide-layer commence à l'intérieur de la bordure du plateau.
+       * On prend donc clientLeft/clientTop en compte afin que la copie
+       * animée et la vraie tuile aient exactement la même position.
+       */
+      const boardContentLeft = boardRect.left + boardElement.clientLeft;
+      const boardContentTop = boardRect.top + boardElement.clientTop;
+
+      const movements = calculateTileMovements(game.board, direction);
+
+      /*
+       * Une destination qui reçoit deux tuiles correspond à une fusion.
+       * On mémorise uniquement ces cases pour leur appliquer le bump.
+       */
+      const destinationCounts = new Map<string, number>();
+
+      movements.forEach((movement) => {
+        const key = `${movement.toRow}-${movement.toColumn}`;
+        destinationCounts.set(key, (destinationCounts.get(key) ?? 0) + 1);
       });
 
-      if (mergedDestinationKeys.size > 0) {
-        playSound(fusionSoundRef);
-        setMergedCells(mergedDestinationKeys);
+      const mergedDestinationKeys = new Set(
+        [...destinationCounts.entries()]
+          .filter(([, count]) => count === 2)
+          .map(([key]) => key),
+      );
 
-        mergeBumpTimerRef.current = window.setTimeout(() => {
-          setMergedCells(new Set());
-          mergeBumpTimerRef.current = null;
-        }, MERGE_BUMP_DURATION);
-      }
+      /*
+       * On n'anime pas les tuiles immobiles qui ne fusionnent pas.
+       * Elles restent affichées normalement, ce qui évite le petit
+       * clignotement/saut visible à la fin du déplacement.
+       *
+       * Une tuile immobile qui participe à une fusion reste animée :
+       * elle doit converger avec l'autre tuile vers la même destination.
+       */
+      const animatedMovements = movements.filter((movement) => {
+        const moved =
+          movement.fromRow !== movement.toRow ||
+          movement.fromColumn !== movement.toColumn;
 
-      animationTimerRef.current = null;
-      isAnimatingRef.current = false;
-      setIsAnimating(false);
-      setSlideTiles([]);
-      setHiddenSourceCells(new Set());
-    }, SLIDE_COMMIT_DELAY);
-  }, [game, playSound, startMusic, tutorialDone]);
+        const destinationKey = `${movement.toRow}-${movement.toColumn}`;
+
+        return moved || mergedDestinationKeys.has(destinationKey);
+      });
+
+      const hiddenSources = new Set(
+        animatedMovements.map(
+          (movement) => `${movement.fromRow}-${movement.fromColumn}`,
+        ),
+      );
+
+      const measuredSlideTiles = animatedMovements.flatMap(
+        (movement, index) => {
+          const sourceElement = boardElement.querySelector<HTMLElement>(
+            `[data-row="${movement.fromRow}"][data-column="${movement.fromColumn}"]`,
+          );
+
+          const targetElement = boardElement.querySelector<HTMLElement>(
+            `[data-row="${movement.toRow}"][data-column="${movement.toColumn}"]`,
+          );
+
+          if (!sourceElement || !targetElement) {
+            return [];
+          }
+
+          const sourceRect = sourceElement.getBoundingClientRect();
+          const targetRect = targetElement.getBoundingClientRect();
+
+          return [
+            {
+              ...movement,
+              id: `${movement.fromRow}-${movement.fromColumn}-${index}`,
+              left: sourceRect.left - boardContentLeft,
+              top: sourceRect.top - boardContentTop,
+              width: sourceRect.width,
+              height: sourceRect.height,
+              deltaX: targetRect.left - sourceRect.left,
+              deltaY: targetRect.top - sourceRect.top,
+            },
+          ];
+        },
+      );
+
+      isAnimatingRef.current = true;
+      setIsAnimating(true);
+      setSlideTiles(measuredSlideTiles);
+      setHiddenSourceCells(hiddenSources);
+
+      animationTimerRef.current = window.setTimeout(() => {
+        const nextBoard = addRandomTile(move.board);
+        const nextScore = game.score + move.gained;
+        const nextBestScore = Math.max(game.bestScore, nextScore);
+
+        const hasWon =
+          game.hasWon ||
+          nextBoard.some((row) => row.some((value) => value >= WIN_VALUE));
+
+        const gameOver = !hasAvailableMove(nextBoard);
+
+        if (nextBestScore !== game.bestScore) {
+          saveBestScore(nextBestScore);
+        }
+
+        setGame({
+          board: nextBoard,
+          score: nextScore,
+          bestScore: nextBestScore,
+          gameOver,
+          hasWon,
+          keepPlaying: game.keepPlaying,
+        });
+
+        if (mergedDestinationKeys.size > 0) {
+          playSound(fusionSoundRef);
+          setMergedCells(mergedDestinationKeys);
+
+          mergeBumpTimerRef.current = window.setTimeout(() => {
+            setMergedCells(new Set());
+            mergeBumpTimerRef.current = null;
+          }, MERGE_BUMP_DURATION);
+        }
+
+        animationTimerRef.current = null;
+        isAnimatingRef.current = false;
+        setIsAnimating(false);
+        setSlideTiles([]);
+        setHiddenSourceCells(new Set());
+      }, SLIDE_COMMIT_DELAY);
+    },
+    [game, playSound, startMusic, tutorialDone],
+  );
 
   const startNewGame = useCallback(() => {
     stopSlideAnimation();
@@ -586,7 +620,7 @@ function App() {
       };
     });
 
-    setScreen('game');
+    setScreen("game");
   }, []);
 
   const continueGame = useCallback(() => {
@@ -612,24 +646,69 @@ function App() {
     setTutorialStep(0);
   }, []);
 
+  const replayAfterGameOver = useCallback(async () => {
+    if (adInProgressRef.current) {
+      return;
+    }
+
+    adInProgressRef.current = true;
+    playClickSound();
+
+    const nextAdCount = readGameOverAdCount() + 1;
+
+    if (nextAdCount < AD_EVERY_N_GAMES) {
+      saveGameOverAdCount(nextAdCount);
+      adInProgressRef.current = false;
+      startNewGame();
+      return;
+    }
+
+    setIsShowingAd(true);
+
+    const music = musicRef.current;
+    const shouldResumeMusic = Boolean(music && !music.paused);
+    music?.pause();
+
+    try {
+      const adWasShown = await showInterstitial();
+
+      /*
+       * Si la publicité n'était pas encore prête, on réessaiera dès la
+       * prochaine fin de partie au lieu de repartir de zéro.
+       */
+      saveGameOverAdCount(adWasShown ? 0 : AD_EVERY_N_GAMES - 1);
+    } finally {
+      setIsShowingAd(false);
+      adInProgressRef.current = false;
+      startNewGame();
+
+      if (shouldResumeMusic) {
+        startMusic();
+      }
+    }
+  }, [playClickSound, startMusic, startNewGame]);
+
+  useEffect(() => {
+    void initializeAdMob();
+  }, []);
 
   useEffect(() => {
     const music = new Audio(musicAudio);
     music.loop = true;
     music.volume = MUSIC_VOLUME;
-    music.preload = 'auto';
+    music.preload = "auto";
 
     const click = new Audio(clickAudio);
     click.volume = CLICK_VOLUME;
-    click.preload = 'auto';
+    click.preload = "auto";
 
     const swoosh = new Audio(swooshAudio);
     swoosh.volume = SWOOSH_VOLUME;
-    swoosh.preload = 'auto';
+    swoosh.preload = "auto";
 
     const fusion = new Audio(fusionAudio);
     fusion.volume = FUSION_VOLUME;
-    fusion.preload = 'auto';
+    fusion.preload = "auto";
 
     musicRef.current = music;
     clickSoundRef.current = click;
@@ -657,17 +736,14 @@ function App() {
       });
     };
 
-    window.addEventListener('pointerdown', unlockAudio, { once: true });
-    window.addEventListener('keydown', unlockAudio, { once: true });
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener("pointerdown", unlockAudio, { once: true });
+    window.addEventListener("keydown", unlockAudio, { once: true });
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      window.removeEventListener('pointerdown', unlockAudio);
-      window.removeEventListener('keydown', unlockAudio);
-      document.removeEventListener(
-        'visibilitychange',
-        handleVisibilityChange,
-      );
+      window.removeEventListener("pointerdown", unlockAudio);
+      window.removeEventListener("keydown", unlockAudio);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
 
       music.pause();
       click.pause();
@@ -683,19 +759,19 @@ function App() {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (screen !== 'game') {
+      if (screen !== "game") {
         return;
       }
 
       const directions: Record<string, Direction | undefined> = {
-        ArrowLeft: 'left',
-        ArrowRight: 'right',
-        ArrowUp: 'up',
-        ArrowDown: 'down',
-        a: 'left',
-        d: 'right',
-        w: 'up',
-        s: 'down',
+        ArrowLeft: "left",
+        ArrowRight: "right",
+        ArrowUp: "up",
+        ArrowDown: "down",
+        a: "left",
+        d: "right",
+        w: "up",
+        s: "down",
       };
 
       const direction = directions[event.key];
@@ -706,8 +782,8 @@ function App() {
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown, { passive: false });
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown, { passive: false });
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [performMove, screen]);
 
   useEffect(() => {
@@ -749,13 +825,13 @@ function App() {
     }
 
     if (Math.abs(deltaX) > Math.abs(deltaY)) {
-      performMove(deltaX > 0 ? 'right' : 'left');
+      performMove(deltaX > 0 ? "right" : "left");
     } else {
-      performMove(deltaY > 0 ? 'down' : 'up');
+      performMove(deltaY > 0 ? "down" : "up");
     }
   };
 
-  if (screen === 'menu') {
+  if (screen === "menu") {
     return (
       <main className="menu-screen">
         <video
@@ -894,7 +970,7 @@ function App() {
         </header>
 
         <div
-          className={`board-wrapper${tutorialVisible ? ' tutorial-blocked' : ''}`}
+          className={`board-wrapper${tutorialVisible ? " tutorial-blocked" : ""}`}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
           aria-label="Plateau de jeu Dino Merge"
@@ -912,19 +988,18 @@ function App() {
 
           <div
             ref={boardRef}
-            className={`board${isAnimating ? ' is-animating' : ''}`}
+            className={`board${isAnimating ? " is-animating" : ""}`}
           >
             {game.board.flatMap((row, rowIndex) =>
               row.map((value, columnIndex) => {
                 const cellKey = `${rowIndex}-${columnIndex}`;
                 const mergedClass = mergedCells.has(cellKey)
-                  ? ' tile-merged'
-                  : '';
+                  ? " tile-merged"
+                  : "";
 
-                const hiddenSourceClass =
-                  hiddenSourceCells.has(cellKey)
-                    ? ' tile-source-hidden'
-                    : '';
+                const hiddenSourceClass = hiddenSourceCells.has(cellKey)
+                  ? " tile-source-hidden"
+                  : "";
 
                 return (
                   <div
@@ -936,9 +1011,7 @@ function App() {
                     key={`${rowIndex}-${columnIndex}-${value}`}
                     data-row={rowIndex}
                     data-column={columnIndex}
-                    aria-label={
-                      value === 0 ? 'Case vide' : `Case ${value}`
-                    }
+                    aria-label={value === 0 ? "Case vide" : `Case ${value}`}
                   >
                     {renderTileContent(value)}
                   </div>
@@ -954,10 +1027,9 @@ function App() {
                     top: tile.top,
                     width: tile.width,
                     height: tile.height,
-                    '--slide-x': `${tile.deltaX}px`,
-                    '--slide-y': `${tile.deltaY}px`,
-                    '--slide-duration':
-                      `${SLIDE_ANIMATION_DURATION}ms`,
+                    "--slide-x": `${tile.deltaX}px`,
+                    "--slide-y": `${tile.deltaY}px`,
+                    "--slide-duration": `${SLIDE_ANIMATION_DURATION}ms`,
                   };
 
                   return (
@@ -1017,58 +1089,59 @@ function App() {
           )}
 
           {game.gameOver && (!game.hasWon || game.keepPlaying) && (
-          <div
-            className="game-over-overlay"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Partie terminée"
-          >
             <div
-              className="game-over-card"
-              style={{ backgroundImage: `url(${gameOverBgImg})` }}
+              className="game-over-overlay"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Partie terminée"
             >
-              <div className="game-over-content">
-                <div className="game-over-score">
-                  <span>Meilleur score</span>
-                  <strong>{game.bestScore}</strong>
+              <div
+                className="game-over-card"
+                style={{ backgroundImage: `url(${gameOverBgImg})` }}
+              >
+                <div className="game-over-content">
+                  <div className="game-over-score">
+                    <span>Meilleur score</span>
+                    <strong>{game.bestScore}</strong>
+                  </div>
+
+                  <div className="game-over-score">
+                    <span>Score réalisé</span>
+                    <strong>{game.score}</strong>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="game-over-replay-button"
+                    onClick={() => {
+                      void replayAfterGameOver();
+                    }}
+                    disabled={isShowingAd}
+                    aria-label={
+                      isShowingAd ? "Chargement de la publicité" : "Rejouer"
+                    }
+                  >
+                    <img
+                      src={replayButtonImg}
+                      alt=""
+                      aria-hidden="true"
+                      className="replay-normal"
+                      draggable={false}
+                    />
+
+                    <img
+                      src={replayButtonPressedImg}
+                      alt=""
+                      aria-hidden="true"
+                      className="replay-pressed"
+                      draggable={false}
+                    />
+                  </button>
                 </div>
-
-                <div className="game-over-score">
-                  <span>Score réalisé</span>
-                  <strong>{game.score}</strong>
-                </div>
-
-                <button
-                  type="button"
-                  className="game-over-replay-button"
-                  onClick={() => {
-                    playClickSound();
-                    startNewGame();
-                  }}
-                  aria-label="Rejouer"
-                >
-                  <img
-                    src={replayButtonImg}
-                    alt=""
-                    aria-hidden="true"
-                    className="replay-normal"
-                    draggable={false}
-                  />
-
-                  <img
-                    src={replayButtonPressedImg}
-                    alt=""
-                    aria-hidden="true"
-                    className="replay-pressed"
-                    draggable={false}
-                  />
-                </button>
               </div>
             </div>
-          </div>
-        )}
+          )}
         </div>
-
       </section>
 
       {tutorialVisible && (
@@ -1096,8 +1169,8 @@ function App() {
                   key={step}
                   className={
                     step === tutorialStep
-                      ? 'tutorial-dot tutorial-dot-active'
-                      : 'tutorial-dot'
+                      ? "tutorial-dot tutorial-dot-active"
+                      : "tutorial-dot"
                   }
                 />
               ))}
@@ -1126,8 +1199,8 @@ function App() {
                 </div>
 
                 <p>
-                  Glisse ton doigt dans une direction pour déplacer toutes
-                  les cases du plateau.
+                  Glisse ton doigt dans une direction pour déplacer toutes les
+                  cases du plateau.
                 </p>
               </div>
             )}
@@ -1145,8 +1218,8 @@ function App() {
                 </div>
 
                 <p>
-                  Deux dinosaures identiques qui se touchent fusionnent
-                  pour créer l'évolution suivante.
+                  Deux dinosaures identiques qui se touchent fusionnent pour
+                  créer l'évolution suivante.
                 </p>
               </div>
             )}
@@ -1182,7 +1255,7 @@ function App() {
                 }
               }}
             >
-              {tutorialStep < 2 ? 'Suivant' : "C'est parti !"}
+              {tutorialStep < 2 ? "Suivant" : "C'est parti !"}
             </button>
           </div>
         </div>
