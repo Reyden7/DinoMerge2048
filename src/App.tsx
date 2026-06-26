@@ -8,6 +8,18 @@ import {
   type Direction,
 } from './game';
 
+import eggImg from './assets/dino/oeuf.png';
+import dodoImg from './assets/dino/dodo.png';
+import compsoImg from './assets/dino/compso.png';
+import raptorImg from './assets/dino/raptor.png';
+import pachyImg from './assets/dino/pachy.png';
+import ankyImg from './assets/dino/anky.png';
+import paraImg from './assets/dino/para.png';
+import triceImg from './assets/dino/trice.png';
+import stegoImg from './assets/dino/stego.png';
+import diploImg from './assets/dino/diplo.png';
+import trexImg from './assets/dino/trex.png';
+
 const BEST_SCORE_KEY = 'merge2048-best-score';
 const SWIPE_THRESHOLD = 35;
 
@@ -17,6 +29,20 @@ interface GameState {
   bestScore: number;
   gameOver: boolean;
 }
+
+const TILE_DATA: Record<number, { name: string; image: string }> = {
+  2: { name: 'Œuf', image: eggImg },
+  4: { name: 'Dodo', image: dodoImg },
+  8: { name: 'Compsognatus', image: compsoImg },
+  16: { name: 'Raptor', image: raptorImg },
+  32: { name: 'Pachysaurus', image: pachyImg },
+  64: { name: 'Ankylosaure', image: ankyImg },
+  128: { name: 'Parasaurolophus', image: paraImg },
+  256: { name: 'Tricératops', image: triceImg },
+  512: { name: 'Stégosaures', image: stegoImg },
+  1024: { name: 'Diplodocus', image: diploImg },
+  2048: { name: 'Trex', image: trexImg },
+};
 
 function readBestScore(): number {
   try {
@@ -31,7 +57,7 @@ function saveBestScore(score: number): void {
   try {
     localStorage.setItem(BEST_SCORE_KEY, String(score));
   } catch {
-    // Le jeu reste fonctionnel même si le stockage local est indisponible.
+    // ignore
   }
 }
 
@@ -40,7 +66,32 @@ function tileClass(value: number): string {
     return 'tile tile-empty';
   }
 
-  return `tile tile-${Math.min(value, 8192)}`;
+  return 'tile tile-dino';
+}
+
+function renderTileContent(value: number) {
+  if (value === 0) {
+    return null;
+  }
+
+  const info = TILE_DATA[value];
+
+  if (!info) {
+    return <span>{value}</span>;
+  }
+
+  return (
+    <>
+      <div className="tile-value">{value}</div>
+      <img
+        src={info.image}
+        alt={info.name}
+        className="tile-image"
+        draggable={false}
+      />
+      <div className="tile-name">{info.name}</div>
+    </>
+  );
 }
 
 function App() {
@@ -151,8 +202,8 @@ function App() {
       <section className="game">
         <header className="top-bar">
           <div>
-            <h1>Merge</h1>
-            <p className="subtitle">Fusionne les nombres jusqu’à 2048.</p>
+            <h1>Dino Merge</h1>
+            <p className="subtitle">Fusionne les dinosaures jusqu’au Trex.</p>
           </div>
 
           <div className="score-group" aria-label="Scores">
@@ -168,7 +219,7 @@ function App() {
         </header>
 
         <div className="actions">
-          <p>Glisse dans une direction pour déplacer les cases.</p>
+          <p>Glisse dans une direction pour fusionner les dinos.</p>
           <button type="button" onClick={startNewGame}>
             Nouvelle partie
           </button>
@@ -178,7 +229,7 @@ function App() {
           className="board-wrapper"
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
-          aria-label="Plateau de jeu 2048"
+          aria-label="Plateau de jeu Dino Merge"
         >
           <div className="board">
             {game.board.flatMap((row, rowIndex) =>
@@ -188,7 +239,7 @@ function App() {
                   key={`${rowIndex}-${columnIndex}-${value}`}
                   aria-label={value === 0 ? 'Case vide' : `Case ${value}`}
                 >
-                  {value !== 0 && value}
+                  {renderTileContent(value)}
                 </div>
               )),
             )}
@@ -205,15 +256,6 @@ function App() {
               </div>
             </div>
           )}
-        </div>
-
-        <div className="mobile-controls" aria-label="Contrôles tactiles">
-          <button onClick={() => performMove('up')} aria-label="Haut">↑</button>
-          <div>
-            <button onClick={() => performMove('left')} aria-label="Gauche">←</button>
-            <button onClick={() => performMove('down')} aria-label="Bas">↓</button>
-            <button onClick={() => performMove('right')} aria-label="Droite">→</button>
-          </div>
         </div>
       </section>
     </main>
