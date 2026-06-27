@@ -2,8 +2,8 @@
 <resources>
     <string name="app_name">DinoMerge!</string>
     <string name="title_activity_main">DinoMerge!</string>
-    <string name="package_name">com.loomstudio.merge2048</string>
-    <string name="custom_url_scheme">com.loomstudio.merge2048</string>
+    <string name="package_name">com.loomstudio.dinomerge2048</string>
+    <string name="custom_url_scheme">com.loomstudio.dinomerge2048</string>
     <string name="admob_app_id">ca-app-pub-2333433898910944~6558323035</string>
 </resources>
 
