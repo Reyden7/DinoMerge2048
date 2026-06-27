@@ -46,6 +46,8 @@ import clickAudio from "./assets/sound/click.mp3";
 import swooshAudio from "./assets/sound/swoosh.mp3";
 import fusionAudio from "./assets/sound/fusion.mp3";
 
+import loomStudioImg from './assets/ui/menu/loomstudio.png';
+
 const BEST_SCORE_KEY = "merge2048-best-score";
 const CURRENT_GAME_KEY = "dinomerge-current-game";
 const TUTORIAL_DONE_KEY = "dinomerge-tutorial-done";
@@ -56,13 +58,14 @@ const WIN_VALUE = 2048;
 const SLIDE_ANIMATION_DURATION = 165;
 const SLIDE_COMMIT_DELAY = 195;
 const MERGE_BUMP_DURATION = 240;
+const STUDIO_SPLASH_DURATION = 2800;
 
 const MUSIC_VOLUME = 0.32;
 const CLICK_VOLUME = 0.65;
 const SWOOSH_VOLUME = 0.2;
 const FUSION_VOLUME = 0.2;
 
-type Screen = "menu" | "game";
+type Screen = "studio" | "menu" | "game";
 type TutorialStep = 0 | 1 | 2;
 
 interface GameState {
@@ -328,7 +331,7 @@ function renderTileContent(value: number) {
 }
 
 function App() {
-  const [screen, setScreen] = useState<Screen>("menu");
+  const [screen, setScreen] = useState<Screen>("studio");
   const [tutorialDone, setTutorialDone] = useState<boolean>(() =>
     readTutorialDone(),
   );
@@ -689,6 +692,20 @@ function App() {
   }, [playClickSound, startMusic, startNewGame]);
 
   useEffect(() => {
+    if (screen !== "studio") {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      setScreen("menu");
+    }, STUDIO_SPLASH_DURATION);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [screen]);
+
+  useEffect(() => {
     void initializeAdMob();
   }, []);
 
@@ -830,6 +847,19 @@ function App() {
       performMove(deltaY > 0 ? "down" : "up");
     }
   };
+
+  if (screen === "studio") {
+    return (
+      <main className="studio-splash" aria-label="LoomStudio">
+        <img
+          src={loomStudioImg}
+          alt="LoomStudio"
+          className="studio-splash-image"
+          draggable={false}
+        />
+      </main>
+    );
+  }
 
   if (screen === "menu") {
     return (
