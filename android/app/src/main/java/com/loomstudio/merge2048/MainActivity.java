@@ -1,4 +1,4 @@
-package com.loomstudio.merge2048;
+package com.loomstudio.dinomerge2048;
 
 import com.getcapacitor.BridgeActivity;
 

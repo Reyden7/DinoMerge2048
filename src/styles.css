@@ -706,54 +706,60 @@ button {
 }
 
 /* Haut gauche : orientée vers le bas / droite */
-.fern-top-left {
-  top: 2%;
-  left: -8%;
-  width: 34%;
+.fern-top-left1 {
+    top: -10%;
+    left: -30%;
+    width: 70%;
+    --fern-transform: rotate(180deg);
+  }
+   .fern-top-left2 {
+    top: -10%;
+    left: -30%;
+    width: 70%;
+    --fern-transform: rotate(200deg);
+  }
 
-  --fern-transform: rotate(145deg);
-  animation-delay: -0.8s;
-}
+  .fern-top-right {
+    top: -5%;
+    right: -18%;
+    width: 50%;
+    --fern-transform: rotate(280deg);
+  }
 
-/* Haut droite : orientée vers le bas / gauche */
-.fern-top-right {
-  top: 1%;
-  right: -8%;
-  width: 34%;
+  .fern-mid-right {
+    top: 20%;
+    right: -16%;
+    width: 40%;
+  }
 
-  --fern-transform: scaleX(-1) rotate(145deg);
-  animation-delay: -2.3s;
-}
+  .fern-bottom-left {
+    bottom: -13%;
+    left: -30%;
+    width: 62%;
+    --fern-transform: rotate(100deg);
+  }
 
-/* Milieu droite : orientée vers la gauche */
-.fern-mid-right {
-  top: 33%;
-  right: -13%;
-  width: 36%;
-
-  --fern-transform: scaleX(-1) rotate(95deg);
-  animation-delay: -1.5s;
-}
-
-/* Bas gauche : orientée vers le haut / droite */
-.fern-bottom-left {
-  bottom: -2%;
-  left: -10%;
-  width: 38%;
-
-  --fern-transform: rotate(35deg);
-  animation-delay: -3s;
-}
 
 /* Bas droite : orientée vers le haut / gauche */
-.fern-bottom-right {
-  bottom: -3%;
-  right: -10%;
-  width: 38%;
+.fern-bottom-right1 {
+    bottom: -18%;
+    right: -13%;
+    width: 80%;
+    --fern-transform: rotate(330deg);
+  }
+  .fern-bottom-right2 {
+    bottom: -18%;
+    right: -13%;
+    width: 74%;
+    --fern-transform: rotate(300deg);
+  }
+  .fern-bottom-right3 {
+    bottom: -18%;
+    right: -40%;
+    width: 80%;
+    --fern-transform: rotate(360deg);
+  }
 
-  --fern-transform: scaleX(-1) rotate(35deg);
-  animation-delay: -4.2s;
-}
 
 /* Mouvement léger */
 
