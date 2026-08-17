@@ -72,6 +72,11 @@ button {
   min-height: 100vh;
   min-height: 100dvh;
 
+  background-image: url("./assets/ui/bg.webp");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+
   padding:
     max(6px, env(safe-area-inset-top))
     max(6px, env(safe-area-inset-right))
@@ -215,8 +220,8 @@ button {
 
   width: min(
     calc(100vw - 12px),
-    calc(100dvh - 165px),
-    620px
+    calc((100dvh - 165px) * 941 / 1113),
+    530px
   );
 
   margin: 0 auto;
@@ -271,32 +276,28 @@ button {
 }
 
 .board {
+  position: relative;
+  isolation: isolate;
   display: grid;
 
   width: 100%;
-  aspect-ratio: 1;
+  aspect-ratio: 941 / 1113;
 
   grid-template-columns: repeat(4, minmax(0, 1fr));
   grid-template-rows: repeat(4, minmax(0, 1fr));
 
-  gap: clamp(6px, 1.7vw, 10px);
-  padding: clamp(8px, 2vw, 12px);
+  gap: 2%;
+  padding: 14% 8.8%;
 
-  border: 4px solid #633719;
-  border-radius: 21px;
+  border: 0;
+  border-radius: 0;
 
-  background:
-    linear-gradient(
-      135deg,
-      #c58a42 0%,
-      #925421 46%,
-      #b87332 100%
-    );
+  background-image: url("./assets/ui/cadre.webp");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% auto;
 
-  box-shadow:
-    0 7px 0 #472713,
-    0 14px 24px rgb(27 25 12 / 40%),
-    inset 0 3px 0 rgb(255 255 255 / 18%);
+  filter: drop-shadow(0 12px 14px rgb(27 25 12 / 38%));
 }
 
 /* =========================================================
@@ -320,48 +321,17 @@ button {
 }
 
 .tile-empty {
-  border: 2px solid #62894d;
-
-  background:
-    radial-gradient(
-      circle at 25% 25%,
-      rgb(174 213 82 / 18%) 0 4%,
-      transparent 5%
-    ),
-    radial-gradient(
-      circle at 70% 75%,
-      rgb(49 91 35 / 22%) 0 5%,
-      transparent 6%
-    ),
-    linear-gradient(
-      145deg,
-      #81ad45 0%,
-      #5f8736 55%,
-      #4d702f 100%
-    );
-
-  box-shadow:
-    inset 0 3px 5px rgb(35 64 29 / 30%),
-    inset 0 -2px 0 rgb(255 255 255 / 12%);
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 
   animation: none;
 }
 
 .tile-dino {
-  border: 2px solid #8b5c28;
-
-  background:
-    linear-gradient(
-      145deg,
-      #a7d853 0%,
-      #7fb73e 60%,
-      #679632 100%
-    );
-
-  box-shadow:
-    inset 0 3px 0 rgb(255 255 255 / 24%),
-    0 3px 0 #68431f,
-    0 5px 8px rgb(43 31 17 / 28%);
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .tile-image {
@@ -528,60 +498,6 @@ button {
   flex-wrap: wrap;
 }
 
-.fern-top-left1 {
-    top: -10%;
-    left: -30%;
-    width: 10%;
-    --fern-transform: rotate(180deg);
-  }
-   .fern-top-left2 {
-    top: -10%;
-    left: -30%;
-    width: 20%;
-    --fern-transform: rotate(200deg);
-  }
-
-  .fern-top-right {
-    top: -5%;
-    right: -18%;
-    width: 10%;
-    --fern-transform: rotate(280deg);
-  }
-
-  .fern-mid-right {
-    top: 34%;
-    right: -16%;
-    width: 10%;
-  }
-
-  .fern-bottom-left {
-    bottom: -1%;
-    left: -30%;
-    width: 10%;
-    --fern-transform: rotate(100deg);
-  }
-
-
-
-  .fern-bottom-right1 {
-    bottom: -10%;
-    right: -13%;
-    width: 80%;
-    --fern-transform: rotate(330deg);
-  }
-  .fern-bottom-right2 {
-    bottom: -10%;
-    right: -13%;
-    width: 74%;
-    --fern-transform: rotate(300deg);
-  }
-  .fern-bottom-right3 {
-    bottom: -10%;
-    right: -40%;
-    width: 80%;
-    --fern-transform: rotate(360deg);
-  }
-
 /* =========================================================
    ANIMATIONS
    ========================================================= */
@@ -633,7 +549,7 @@ button {
   .board-wrapper {
     width: min(
       calc(100vw - 8px),
-      calc(100dvh - 150px)
+      calc((100dvh - 150px) * 941 / 1113)
     );
   }
 
@@ -642,14 +558,6 @@ button {
     left: 0;
 
     padding: 7px 11px;
-  }
-
-  .board {
-    gap: 6px;
-    padding: 7px;
-
-    border-width: 3px;
-    border-radius: 17px;
   }
 
   .tile {
@@ -665,177 +573,14 @@ button {
   .board-wrapper {
     width: min(
       calc(100vw - 10px),
-      calc(100dvh - 125px),
-      560px
+      calc((100dvh - 125px) * 941 / 1113),
+      530px
     );
   }
 
   .new-game-button {
     top: -38px;
     padding: 6px 10px;
-  }
-}
-
-/* =========================================================
-   FOUGÈRES AUTOUR DE LA SCÈNE
-   ========================================================= */
-
-.app-shell {
-  position: relative;
-  overflow: hidden;
-}
-
-.game {
-  position: relative;
-  z-index: 5;
-}
-
-.scene-fern {
-  position: absolute;
-  z-index: 9;
-  display: block;
-
-  pointer-events: none;
-  user-select: none;
-
-  filter: drop-shadow(0 10px 10px rgb(18 31 12 / 38%));
-  will-change: transform;
-
-  transform: var(--fern-transform);
-  animation: fern-sway 6s ease-in-out infinite;
-}
-
-/* Haut gauche : orientée vers le bas / droite */
-.fern-top-left1 {
-    top: -10%;
-    left: -30%;
-    width: 70%;
-    --fern-transform: rotate(180deg);
-  }
-   .fern-top-left2 {
-    top: -10%;
-    left: -30%;
-    width: 70%;
-    --fern-transform: rotate(200deg);
-  }
-
-  .fern-top-right {
-    top: -5%;
-    right: -18%;
-    width: 50%;
-    --fern-transform: rotate(280deg);
-  }
-
-  .fern-mid-right {
-    top: 20%;
-    right: -16%;
-    width: 40%;
-  }
-
-  .fern-bottom-left {
-    bottom: -13%;
-    left: -30%;
-    width: 62%;
-    --fern-transform: rotate(100deg);
-  }
-
-
-/* Bas droite : orientée vers le haut / gauche */
-.fern-bottom-right1 {
-    bottom: -18%;
-    right: -13%;
-    width: 80%;
-    --fern-transform: rotate(330deg);
-  }
-  .fern-bottom-right2 {
-    bottom: -18%;
-    right: -13%;
-    width: 74%;
-    --fern-transform: rotate(300deg);
-  }
-  .fern-bottom-right3 {
-    bottom: -18%;
-    right: -40%;
-    width: 80%;
-    --fern-transform: rotate(360deg);
-  }
-
-
-/* Mouvement léger */
-
-@keyframes fern-sway {
-  0%,
-  100% {
-    transform: var(--fern-transform) translateY(0) rotate(0deg);
-  }
-
-  50% {
-    transform: var(--fern-transform) translateY(-6px) rotate(2deg);
-  }
-}
-
-/* Mobile */
-
-@media (max-width: 430px) {
-  .fern-top-left1 {
-    top: -10%;
-    left: -30%;
-    width: 70%;
-    --fern-transform: rotate(180deg);
-  }
-   .fern-top-left2 {
-    top: -10%;
-    left: -30%;
-    width: 70%;
-    --fern-transform: rotate(200deg);
-  }
-
-  .fern-top-right {
-    top: -5%;
-    right: -18%;
-    width: 50%;
-    --fern-transform: rotate(280deg);
-  }
-
-  .fern-mid-right {
-    top: 20%;
-    right: -16%;
-    width: 40%;
-  }
-
-  .fern-bottom-left {
-    bottom: -1%;
-    left: -30%;
-    width: 62%;
-    --fern-transform: rotate(100deg);
-  }
-
-
-
-  .fern-bottom-right1 {
-    bottom: -5%;
-    right: -13%;
-    width: 80%;
-    --fern-transform: rotate(330deg);
-  }
-  .fern-bottom-right2 {
-    bottom: -5%;
-    right: -13%;
-    width: 74%;
-    --fern-transform: rotate(300deg);
-  }
-  .fern-bottom-right3 {
-    bottom: -5%;
-    right: -40%;
-    width: 80%;
-    --fern-transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .scene-fern {
-    animation: none;
-    transform: var(--fern-transform);
   }
 }
 
@@ -1047,11 +792,6 @@ button {
    SLIDE DES TUILES + BUMP UNIQUEMENT SUR FUSION
    ========================================================= */
 
-.board {
-  position: relative;
-  isolation: isolate;
-}
-
 /* Calque contenant les copies visuelles pendant le déplacement. */
 .slide-layer {
   position: absolute;
@@ -1084,29 +824,9 @@ button {
  * prennent temporairement l'apparence d'une case vide.
  */
 .tile-source-hidden {
-  border: 2px solid #62894d !important;
-
-  background:
-    radial-gradient(
-      circle at 25% 25%,
-      rgb(174 213 82 / 18%) 0 4%,
-      transparent 5%
-    ),
-    radial-gradient(
-      circle at 70% 75%,
-      rgb(49 91 35 / 22%) 0 5%,
-      transparent 6%
-    ),
-    linear-gradient(
-      145deg,
-      #81ad45 0%,
-      #5f8736 55%,
-      #4d702f 100%
-    ) !important;
-
-  box-shadow:
-    inset 0 3px 5px rgb(35 64 29 / 30%),
-    inset 0 -2px 0 rgb(255 255 255 / 12%) !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .tile-source-hidden > * {

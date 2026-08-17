@@ -17,42 +17,43 @@ import { initializeAdMob, showInterstitial } from "./admob";
 
 import "./menu.css";
 
-import eggImg from "./assets/dino/oeuf.png";
-import dodoImg from "./assets/dino/dodo.png";
-import compsoImg from "./assets/dino/compso.png";
-import raptorImg from "./assets/dino/raptor.png";
-import pachyImg from "./assets/dino/pachy.png";
-import ankyImg from "./assets/dino/anky.png";
-import paraImg from "./assets/dino/para.png";
-import triceImg from "./assets/dino/trice.png";
-import stegoImg from "./assets/dino/stego.png";
-import diploImg from "./assets/dino/diplo.png";
-import trexImg from "./assets/dino/trex.png";
+import eggImg from "./assets/dino/oeuf.webp";
+import dodoImg from "./assets/dino/dodo.webp";
+import compsoImg from "./assets/dino/compso.webp";
+import raptorImg from "./assets/dino/raptor.webp";
+import pachyImg from "./assets/dino/pachy.webp";
+import ankyImg from "./assets/dino/anky.webp";
+import paraImg from "./assets/dino/para.webp";
+import triceImg from "./assets/dino/trice.webp";
+import stegoImg from "./assets/dino/stego.webp";
+import diploImg from "./assets/dino/diplo.webp";
+import trexImg from "./assets/dino/trex.webp";
 
-import supportScoreImg from "./assets/ui/supportscore.png";
-import foliageSideImg from "./assets/ui/feuillage-cote.png";
+import supportScoreImg from "./assets/ui/supportscore.webp";
 
-import menuVideo from "./assets/video/VideoMenu.mp4";
-import menuTitleImg from "./assets/ui/menu/titre.png";
-import playButtonImg from "./assets/ui/menu/bt_normal.png";
-import playButtonPressedImg from "./assets/ui/menu/btpressed.png";
+import menuTitleImg from "./assets/ui/menu/titre.webp";
+import playButtonImg from "./assets/ui/menu/bt_normal.webp";
+import playButtonPressedImg from "./assets/ui/menu/btpressed.webp";
 
-import gameOverBgImg from "./assets/ui/menu/GameOverBG.png";
-import replayButtonImg from "./assets/ui/menu/Rejouer.png";
-import replayButtonPressedImg from "./assets/ui/menu/Rejouer-clicked.png";
+import gameOverBgImg from "./assets/ui/menu/GameOverBG.webp";
+import replayButtonImg from "./assets/ui/menu/Rejouer.webp";
+import replayButtonPressedImg from "./assets/ui/menu/Rejouer-clicked.webp";
 
 import musicAudio from "./assets/sound/musique.mp3";
 import clickAudio from "./assets/sound/click.mp3";
 import swooshAudio from "./assets/sound/swoosh.mp3";
 import fusionAudio from "./assets/sound/fusion.mp3";
 
-import loomStudioImg from './assets/ui/menu/loomstudio.png';
+import loomStudioImg from './assets/ui/menu/loomstudio.webp';
 
 const BEST_SCORE_KEY = "merge2048-best-score";
 const CURRENT_GAME_KEY = "dinomerge-current-game";
 const TUTORIAL_DONE_KEY = "dinomerge-tutorial-done";
-const GAME_OVER_AD_COUNT_KEY = "dinomerge-game-over-ad-count";
+const NEW_GAME_AD_COUNT_KEY = "dinomerge-new-game-ad-count";
+const MUSIC_LEVEL_KEY = "dinomerge-music-level";
+const EFFECTS_LEVEL_KEY = "dinomerge-effects-level";
 const AD_EVERY_N_GAMES = 3;
+const SCORE_AD_INTERVAL = 2000;
 const SWIPE_THRESHOLD = 35;
 const WIN_VALUE = 2048;
 const SLIDE_ANIMATION_DURATION = 165;
@@ -60,10 +61,10 @@ const SLIDE_COMMIT_DELAY = 195;
 const MERGE_BUMP_DURATION = 240;
 const STUDIO_SPLASH_DURATION = 2800;
 
-const MUSIC_VOLUME = 0.32;
-const CLICK_VOLUME = 0.65;
-const SWOOSH_VOLUME = 0.2;
-const FUSION_VOLUME = 0.2;
+const MUSIC_BASE_VOLUME = 0.32;
+const CLICK_BASE_VOLUME = 0.65;
+const SWOOSH_BASE_VOLUME = 0.2;
+const FUSION_BASE_VOLUME = 0.2;
 
 type Screen = "studio" | "menu" | "game";
 type TutorialStep = 0 | 1 | 2;
@@ -262,9 +263,9 @@ function saveCurrentGame(game: GameState): void {
   }
 }
 
-function readGameOverAdCount(): number {
+function readNewGameAdCount(): number {
   try {
-    const value = Number(localStorage.getItem(GAME_OVER_AD_COUNT_KEY) ?? 0);
+    const value = Number(localStorage.getItem(NEW_GAME_AD_COUNT_KEY) ?? 0);
 
     if (!Number.isFinite(value) || value < 0) {
       return 0;
@@ -276,14 +277,37 @@ function readGameOverAdCount(): number {
   }
 }
 
-function saveGameOverAdCount(count: number): void {
+function saveNewGameAdCount(count: number): void {
   try {
     localStorage.setItem(
-      GAME_OVER_AD_COUNT_KEY,
+      NEW_GAME_AD_COUNT_KEY,
       String(Math.max(0, Math.floor(count))),
     );
   } catch {
-    // Une erreur de stockage ne doit jamais empêcher de rejouer.
+    // Une erreur de stockage ne doit jamais empêcher une nouvelle partie.
+  }
+}
+
+function readAudioLevel(key: string): number {
+  try {
+    const savedValue = localStorage.getItem(key);
+
+    if (savedValue === null) {
+      return 1;
+    }
+
+    const value = Number(savedValue);
+    return Number.isFinite(value) ? Math.min(1, Math.max(0, value)) : 1;
+  } catch {
+    return 1;
+  }
+}
+
+function saveAudioLevel(key: string, value: number): void {
+  try {
+    localStorage.setItem(key, String(value));
+  } catch {
+    // Les réglages restent utilisables même si le stockage est indisponible.
   }
 }
 
@@ -332,6 +356,13 @@ function renderTileContent(value: number) {
 
 function App() {
   const [screen, setScreen] = useState<Screen>("studio");
+  const [optionsOpen, setOptionsOpen] = useState(false);
+  const [musicLevel, setMusicLevel] = useState(() =>
+    readAudioLevel(MUSIC_LEVEL_KEY),
+  );
+  const [effectsLevel, setEffectsLevel] = useState(() =>
+    readAudioLevel(EFFECTS_LEVEL_KEY),
+  );
   const [tutorialDone, setTutorialDone] = useState<boolean>(() =>
     readTutorialDone(),
   );
@@ -376,6 +407,10 @@ function App() {
   const [mergedCells, setMergedCells] = useState<Set<string>>(() => new Set());
   const [isShowingAd, setIsShowingAd] = useState(false);
   const adInProgressRef = useRef(false);
+  const gameOverAdHandledRef = useRef(game.gameOver);
+  const lastScoreAdTierRef = useRef(
+    Math.floor(game.score / SCORE_AD_INTERVAL),
+  );
 
   const playSound = useCallback(
     (audioRef: React.RefObject<HTMLAudioElement | null>) => {
@@ -409,6 +444,63 @@ function App() {
     startMusic();
     playSound(clickSoundRef);
   }, [playSound, startMusic]);
+
+  const showGameplayInterstitial = useCallback(async () => {
+    if (adInProgressRef.current) {
+      return;
+    }
+
+    adInProgressRef.current = true;
+    setIsShowingAd(true);
+
+    const music = musicRef.current;
+    const shouldResumeMusic = Boolean(music && !music.paused);
+    music?.pause();
+
+    try {
+      await showInterstitial();
+    } finally {
+      setIsShowingAd(false);
+      adInProgressRef.current = false;
+
+      if (shouldResumeMusic) {
+        startMusic();
+      }
+    }
+  }, [startMusic]);
+
+  useEffect(() => {
+    if (screen !== "game") {
+      return;
+    }
+
+    const currentScoreTier = Math.floor(game.score / SCORE_AD_INTERVAL);
+
+    if (currentScoreTier < lastScoreAdTierRef.current) {
+      lastScoreAdTierRef.current = currentScoreTier;
+    }
+
+    const scoreAdDue = currentScoreTier > lastScoreAdTierRef.current;
+    const gameOverAdDue = game.gameOver && !gameOverAdHandledRef.current;
+
+    if (!game.gameOver) {
+      gameOverAdHandledRef.current = false;
+    }
+
+    if (!scoreAdDue && !gameOverAdDue) {
+      return;
+    }
+
+    if (scoreAdDue) {
+      lastScoreAdTierRef.current = currentScoreTier;
+    }
+
+    if (gameOverAdDue) {
+      gameOverAdHandledRef.current = true;
+    }
+
+    void showGameplayInterstitial();
+  }, [game.gameOver, game.score, screen, showGameplayInterstitial]);
 
   const stopSlideAnimation = useCallback(() => {
     if (animationTimerRef.current !== null) {
@@ -649,7 +741,16 @@ function App() {
     setTutorialStep(0);
   }, []);
 
-  const replayAfterGameOver = useCallback(async () => {
+  const replayAfterGameOver = useCallback(() => {
+    if (adInProgressRef.current) {
+      return;
+    }
+
+    playClickSound();
+    startNewGame();
+  }, [playClickSound, startNewGame]);
+
+  const startNewGameWithAd = useCallback(async () => {
     if (adInProgressRef.current) {
       return;
     }
@@ -657,10 +758,10 @@ function App() {
     adInProgressRef.current = true;
     playClickSound();
 
-    const nextAdCount = readGameOverAdCount() + 1;
+    const nextAdCount = readNewGameAdCount() + 1;
 
     if (nextAdCount < AD_EVERY_N_GAMES) {
-      saveGameOverAdCount(nextAdCount);
+      saveNewGameAdCount(nextAdCount);
       adInProgressRef.current = false;
       startNewGame();
       return;
@@ -674,12 +775,7 @@ function App() {
 
     try {
       const adWasShown = await showInterstitial();
-
-      /*
-       * Si la publicité n'était pas encore prête, on réessaiera dès la
-       * prochaine fin de partie au lieu de repartir de zéro.
-       */
-      saveGameOverAdCount(adWasShown ? 0 : AD_EVERY_N_GAMES - 1);
+      saveNewGameAdCount(adWasShown ? 0 : AD_EVERY_N_GAMES - 1);
     } finally {
       setIsShowingAd(false);
       adInProgressRef.current = false;
@@ -712,19 +808,19 @@ function App() {
   useEffect(() => {
     const music = new Audio(musicAudio);
     music.loop = true;
-    music.volume = MUSIC_VOLUME;
+    music.volume = MUSIC_BASE_VOLUME * musicLevel;
     music.preload = "auto";
 
     const click = new Audio(clickAudio);
-    click.volume = CLICK_VOLUME;
+    click.volume = CLICK_BASE_VOLUME * effectsLevel;
     click.preload = "auto";
 
     const swoosh = new Audio(swooshAudio);
-    swoosh.volume = SWOOSH_VOLUME;
+    swoosh.volume = SWOOSH_BASE_VOLUME * effectsLevel;
     swoosh.preload = "auto";
 
     const fusion = new Audio(fusionAudio);
-    fusion.volume = FUSION_VOLUME;
+    fusion.volume = FUSION_BASE_VOLUME * effectsLevel;
     fusion.preload = "auto";
 
     musicRef.current = music;
@@ -773,6 +869,30 @@ function App() {
       fusionSoundRef.current = null;
     };
   }, []);
+
+  useEffect(() => {
+    if (musicRef.current) {
+      musicRef.current.volume = MUSIC_BASE_VOLUME * musicLevel;
+    }
+
+    saveAudioLevel(MUSIC_LEVEL_KEY, musicLevel);
+  }, [musicLevel]);
+
+  useEffect(() => {
+    if (clickSoundRef.current) {
+      clickSoundRef.current.volume = CLICK_BASE_VOLUME * effectsLevel;
+    }
+
+    if (swooshSoundRef.current) {
+      swooshSoundRef.current.volume = SWOOSH_BASE_VOLUME * effectsLevel;
+    }
+
+    if (fusionSoundRef.current) {
+      fusionSoundRef.current.volume = FUSION_BASE_VOLUME * effectsLevel;
+    }
+
+    saveAudioLevel(EFFECTS_LEVEL_KEY, effectsLevel);
+  }, [effectsLevel]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -864,17 +984,6 @@ function App() {
   if (screen === "menu") {
     return (
       <main className="menu-screen">
-        <video
-          className="menu-video"
-          src={menuVideo}
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="auto"
-          aria-hidden="true"
-        />
-
         <div className="menu-overlay">
           <img
             src={menuTitleImg}
@@ -911,70 +1020,89 @@ function App() {
               draggable={false}
             />
           </button>
+
+          <button
+            type="button"
+            className="menu-options-button"
+            aria-label="Options"
+            onClick={() => {
+              playClickSound();
+              setOptionsOpen(true);
+            }}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              className="menu-options-icon"
+            >
+              <path d="M19.43 12.98c.04-.32.07-.65.07-.98s-.03-.66-.08-.98l2.11-1.65a.5.5 0 0 0 .12-.64l-2-3.46a.5.5 0 0 0-.61-.22l-2.49 1a7.3 7.3 0 0 0-1.69-.98L14.5 2.42A.49.49 0 0 0 14 2h-4a.49.49 0 0 0-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1a.49.49 0 0 0-.61.22l-2 3.46a.49.49 0 0 0 .12.64l2.11 1.65c-.04.32-.08.67-.08.98s.03.66.08.98l-2.11 1.65a.5.5 0 0 0-.12.64l2 3.46a.5.5 0 0 0 .61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65A.49.49 0 0 0 10 22h4a.49.49 0 0 0 .49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1a.49.49 0 0 0 .61-.22l2-3.46a.5.5 0 0 0-.12-.64l-2.11-1.65ZM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5Z" />
+            </svg>
+          </button>
         </div>
+
+        {optionsOpen && (
+          <div
+            className="options-overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="options-title"
+          >
+            <section className="options-panel">
+              <h2 id="options-title">Options audio</h2>
+
+              <label className="volume-control">
+                <span>
+                  Musique
+                  <strong>{Math.round(musicLevel * 100)} %</strong>
+                </span>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={musicLevel}
+                  onChange={(event) => {
+                    setMusicLevel(Number(event.target.value));
+                  }}
+                />
+              </label>
+
+              <label className="volume-control">
+                <span>
+                  Effets sonores
+                  <strong>{Math.round(effectsLevel * 100)} %</strong>
+                </span>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={effectsLevel}
+                  onChange={(event) => {
+                    setEffectsLevel(Number(event.target.value));
+                  }}
+                />
+              </label>
+
+              <button
+                type="button"
+                className="options-close-button"
+                onClick={() => {
+                  playClickSound();
+                  setOptionsOpen(false);
+                }}
+              >
+                Fermer
+              </button>
+            </section>
+          </div>
+        )}
       </main>
     );
   }
 
   return (
     <main className="app-shell">
-      <img
-        src={foliageSideImg}
-        alt=""
-        aria-hidden="true"
-        className="scene-fern fern-top-left1"
-        draggable={false}
-      />
-      <img
-        src={foliageSideImg}
-        alt=""
-        aria-hidden="true"
-        className="scene-fern fern-top-left2"
-        draggable={false}
-      />
-      <img
-        src={foliageSideImg}
-        alt=""
-        aria-hidden="true"
-        className="scene-fern fern-top-right"
-        draggable={false}
-      />
-      <img
-        src={foliageSideImg}
-        alt=""
-        aria-hidden="true"
-        className="scene-fern fern-mid-right"
-        draggable={false}
-      />
-      <img
-        src={foliageSideImg}
-        alt=""
-        aria-hidden="true"
-        className="scene-fern fern-bottom-left"
-        draggable={false}
-      />
-      <img
-        src={foliageSideImg}
-        alt=""
-        aria-hidden="true"
-        className="scene-fern fern-bottom-right1"
-        draggable={false}
-      />
-      <img
-        src={foliageSideImg}
-        alt=""
-        aria-hidden="true"
-        className="scene-fern fern-bottom-right2"
-        draggable={false}
-      />
-      <img
-        src={foliageSideImg}
-        alt=""
-        aria-hidden="true"
-        className="scene-fern fern-bottom-right3"
-        draggable={false}
-      />
-
       <section className="game">
         <header className="game-hud">
           <h1 className="sr-only">Dino Merge</h1>
@@ -1009,9 +1137,9 @@ function App() {
             type="button"
             className="new-game-button"
             onClick={() => {
-              playClickSound();
-              startNewGame();
+              void startNewGameWithAd();
             }}
+            disabled={isShowingAd}
           >
             Nouvelle partie
           </button>

@@ -12,19 +12,11 @@
   height: 100vh;
   height: 100dvh;
 
-  background: #172515;
-}
-
-.menu-video {
-  position: absolute;
-  inset: 0;
-
-  width: 100%;
-  height: 100%;
-
-  object-fit: cover;
-  object-position: center;
-  pointer-events: none;
+  background-color: #172515;
+  background-image: url("./assets/ui/menu/bg.webp");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 
 .menu-overlay {
@@ -162,6 +154,136 @@
   opacity: 1;
 }
 
+.menu-options-button {
+  position: absolute;
+  z-index: 4;
+  right: 50px;
+  bottom: 100px;
+  display: grid;
+  width: clamp(58px, 16vw, 78px);
+  aspect-ratio: 1;
+  place-items: center;
+  padding: 13px;
+  border: 3px solid #654019;
+  border-radius: 50%;
+  background: linear-gradient(#75c348, #399426);
+  box-shadow:
+    0 6px 0 #285f1c,
+    0 10px 14px rgb(45 24 7 / 34%);
+  touch-action: manipulation;
+}
+
+.menu-options-icon {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: #fff8ce;
+  filter: drop-shadow(0 3px 0 #285f1c);
+  pointer-events: none;
+}
+
+.menu-options-button:active {
+  transform: translateY(5px);
+  box-shadow:
+    0 2px 0 #285f1c,
+    0 5px 8px rgb(45 24 7 / 28%);
+}
+
+.menu-options-button:focus-visible,
+.options-close-button:focus-visible,
+.volume-control input:focus-visible {
+  outline: 4px solid #fff1a2;
+  outline-offset: 4px;
+}
+
+.options-overlay {
+  position: absolute;
+  z-index: 20;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding:
+    max(24px, env(safe-area-inset-top))
+    max(18px, env(safe-area-inset-right))
+    max(24px, env(safe-area-inset-bottom))
+    max(18px, env(safe-area-inset-left));
+  background: rgb(17 28 12 / 76%);
+  backdrop-filter: blur(5px);
+}
+
+.options-panel {
+  width: min(90vw, 480px);
+  padding: clamp(24px, 6vw, 38px);
+  border: 5px solid #70451d;
+  border-radius: 30px;
+  background: linear-gradient(180deg, #ffe59c, #e8ae53);
+  box-shadow:
+    inset 0 0 0 4px rgb(255 247 191 / 70%),
+    0 16px 0 #4b2d14,
+    0 24px 42px rgb(0 0 0 / 45%);
+  color: #573214;
+}
+
+.options-panel h2 {
+  margin: 0 0 28px;
+  font-family: Impact, "Arial Black", system-ui, sans-serif;
+  font-size: clamp(1.8rem, 7vw, 2.7rem);
+  letter-spacing: 0.035em;
+  text-align: center;
+  text-transform: uppercase;
+  text-shadow: 0 3px 0 #fff1b6;
+}
+
+.volume-control {
+  display: grid;
+  gap: 12px;
+  margin: 24px 0;
+  font-family: "Arial Black", system-ui, sans-serif;
+  font-size: clamp(1rem, 4vw, 1.25rem);
+}
+
+.volume-control > span {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.volume-control strong {
+  min-width: 68px;
+  text-align: right;
+}
+
+.volume-control input {
+  width: 100%;
+  height: 34px;
+  margin: 0;
+  accent-color: #419b2d;
+  cursor: pointer;
+}
+
+.options-close-button {
+  display: block;
+  min-width: 56%;
+  margin: 32px auto 0;
+  padding: 12px 24px;
+  border: 3px solid #654019;
+  border-radius: 16px;
+  background: linear-gradient(#75c348, #399426);
+  box-shadow: 0 5px 0 #285f1c;
+  color: #fff8ce;
+  font-family: Impact, "Arial Black", system-ui, sans-serif;
+  font-size: 1.2rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-shadow: 0 2px 0 #285f1c;
+}
+
+.options-close-button:active {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 #285f1c;
+}
+
 @keyframes menu-title-float {
   0%,
   100% {
@@ -196,9 +318,10 @@
   }
 
   .menu-play-button {
-    top: 50%;
+    top: 31%;
     width: 64vw;
   }
+
 }
 
 @media (max-height: 700px) {
@@ -215,11 +338,13 @@
     top: 37%;
     width: min(55vw, 330px);
   }
+
 }
 
 @media (prefers-reduced-motion: reduce) {
   .menu-title,
-  .menu-play-button {
+  .menu-play-button,
+  .menu-options-button {
     animation: none;
   }
 }

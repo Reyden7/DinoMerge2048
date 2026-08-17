@@ -1,11 +1,12 @@
 import { Capacitor } from "@capacitor/core";
 import { AdMob, type AdOptions } from "@capacitor-community/admob";
 
-const TEST_INTERSTITIAL_ID = "ca-app-pub-2333433898910944~6558323035";
+const INTERSTITIAL_AD_ID = "ca-app-pub-2333433898910944/7464210597";
+const IS_ADMOB_TESTING = false;
 
 let initialized = false;
 let interstitialReady = false;
-let preparationInProgress = false;
+let preparationPromise: Promise<void> | null = null;
 
 export async function initializeAdMob(): Promise<void> {
   if (!Capacitor.isNativePlatform() || initialized) {
@@ -15,17 +16,19 @@ export async function initializeAdMob(): Promise<void> {
   try {
     await AdMob.initialize();
 
-    let consentInfo = await AdMob.requestConsentInfo();
+    if (!IS_ADMOB_TESTING) {
+      let consentInfo = await AdMob.requestConsentInfo();
 
-    if (!consentInfo.canRequestAds && consentInfo.isConsentFormAvailable) {
-      consentInfo = await AdMob.showConsentForm();
-    }
+      if (!consentInfo.canRequestAds && consentInfo.isConsentFormAvailable) {
+        consentInfo = await AdMob.showConsentForm();
+      }
 
-    if (!consentInfo.canRequestAds) {
-      console.info(
-        "AdMob : les publicités ne peuvent pas encore être demandées.",
-      );
-      return;
+      if (!consentInfo.canRequestAds) {
+        console.info(
+          "AdMob : les publicités ne peuvent pas encore être demandées.",
+        );
+        return;
+      }
     }
 
     initialized = true;
@@ -35,39 +38,51 @@ export async function initializeAdMob(): Promise<void> {
   }
 }
 
-export async function prepareInterstitial(): Promise<void> {
+export function prepareInterstitial(): Promise<void> {
   if (
     !Capacitor.isNativePlatform() ||
     !initialized ||
-    interstitialReady ||
-    preparationInProgress
+    interstitialReady
   ) {
-    return;
+    return Promise.resolve();
   }
 
-  preparationInProgress = true;
+  if (preparationPromise) {
+    return preparationPromise;
+  }
 
   const options: AdOptions = {
-    adId: TEST_INTERSTITIAL_ID,
-    isTesting: false,
+    adId: INTERSTITIAL_AD_ID,
+    isTesting: IS_ADMOB_TESTING,
     immersiveMode: true,
   };
 
-  try {
-    await AdMob.prepareInterstitial(options);
-    interstitialReady = true;
-  } catch (error) {
-    interstitialReady = false;
-    console.error("AdMob : impossible de charger l’interstitiel.", error);
-  } finally {
-    preparationInProgress = false;
-  }
+  preparationPromise = (async () => {
+    try {
+      await AdMob.prepareInterstitial(options);
+      interstitialReady = true;
+    } catch (error) {
+      interstitialReady = false;
+      console.error("AdMob : impossible de charger l’interstitiel.", error);
+    } finally {
+      preparationPromise = null;
+    }
+  })();
+
+  return preparationPromise;
 }
 
 export async function showInterstitial(): Promise<boolean> {
-  if (!Capacitor.isNativePlatform() || !initialized || !interstitialReady) {
-    void prepareInterstitial();
+  if (!Capacitor.isNativePlatform() || !initialized) {
     return false;
+  }
+
+  if (!interstitialReady) {
+    await prepareInterstitial();
+
+    if (!interstitialReady) {
+      return false;
+    }
   }
 
   try {
